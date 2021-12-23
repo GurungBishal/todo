@@ -7,23 +7,25 @@ import {
   Where,
 } from '@loopback/repository';
 import {
-  post,
-  param,
+  del,
   get,
   getModelSchemaRef,
+  param,
   patch,
+  post,
   put,
-  del,
   requestBody,
   response,
 } from '@loopback/rest';
 import {Country} from '../models';
 import {CountryRepository} from '../repositories';
 
+const jsonData = require('../districts.json');
+
 export class CountryController {
   constructor(
     @repository(CountryRepository)
-    public countryRepository : CountryRepository,
+    public countryRepository: CountryRepository,
   ) {}
 
   @post('/countries')
@@ -47,14 +49,24 @@ export class CountryController {
     return this.countryRepository.create(country);
   }
 
+  @post('/countries/json')
+  @response(200, {
+    description: 'Country model instance',
+    content: {'application/json': {schema: getModelSchemaRef(Country)}},
+  })
+  async createJson(): Promise<Country[]> {
+    const inputdata = jsonData.map((districtName: string) => ({
+      name: districtName,
+    }));
+    return this.countryRepository.createAll(inputdata);
+  }
+
   @get('/countries/count')
   @response(200, {
     description: 'Country model count',
     content: {'application/json': {schema: CountSchema}},
   })
-  async count(
-    @param.where(Country) where?: Where<Country>,
-  ): Promise<Count> {
+  async count(@param.where(Country) where?: Where<Country>): Promise<Count> {
     return this.countryRepository.count(where);
   }
 
@@ -106,7 +118,8 @@ export class CountryController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Country, {exclude: 'where'}) filter?: FilterExcludingWhere<Country>
+    @param.filter(Country, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Country>,
   ): Promise<Country> {
     return this.countryRepository.findById(id, filter);
   }
