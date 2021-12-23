@@ -1,6 +1,8 @@
 import {ApplicationConfig, TodoApplication} from './application';
+import {CountryRepository} from './repositories';
 
 export * from './application';
+const jsonData: string[] = require('./districts.json');
 
 export async function main(options: ApplicationConfig = {}) {
   const app = new TodoApplication(options);
@@ -8,6 +10,21 @@ export async function main(options: ApplicationConfig = {}) {
   await app.start();
 
   const url = app.restServer.url;
+  const inputdata = jsonData.map((districtName: string) => ({
+    name: districtName,
+  }));
+  (await app.getRepository(CountryRepository))
+    // .execute(`insert into country (name) values(${jsonData.toString()})`) // TODO: multiple words are not supported
+    .createAll(inputdata)
+    .then(data =>
+      console.log(
+        `successfully inserted json data into database: ${JSON.stringify(
+          data,
+        )}`,
+      ),
+    )
+    .catch(err => console.log(err));
+
   console.log(`Server is running at ${url}`);
   console.log(`Try ${url}/ping`);
 
